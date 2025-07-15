@@ -5,6 +5,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { DocumentModule } from './modules/document/document.module';
 import { ProcessingModule } from './modules/processing/processing.module';
 import { LangChainModule } from './modules/langchain/langchain.module';
+import { HealthModule } from './modules/health/health.module';
 import { RedisConfigService } from './config/redis.config';
 
 @Module({
@@ -36,6 +37,7 @@ import { RedisConfigService } from './config/redis.config';
     DocumentModule,
     ProcessingModule,
     LangChainModule,
+    HealthModule,
   ],
   providers: [RedisConfigService],
 })
