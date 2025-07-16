@@ -319,6 +319,12 @@ export class DocumentController {
       example: {
         success: true,
         data: {
+          job_info: {
+            job_id: "job_123456789",
+            user_id: "user123",
+            file_name: "lab_report.pdf",
+            status: "completed"
+          },
           patient_info: {
             first_name: "John",
             last_name: "Doe"

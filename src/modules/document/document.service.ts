@@ -186,6 +186,18 @@ export class DocumentService {
         return null;
       }
 
+      // Get job details for additional metadata
+      const allJobs = await this.medicalQueue.getJobs([
+        'waiting',
+        'active',
+        'completed',
+        'failed',
+      ]);
+
+      const documentJob = allJobs.find(
+        (job) => job.data.jobId === jobId && job.name === JOB_TYPES.PROCESS_DOCUMENT,
+      );
+
       // Extract data from the results
       const documentData = results.summary?.data || results.summary || {};
       const physicianData = results.physicianMatch?.data || {};
@@ -235,6 +247,12 @@ export class DocumentService {
 
       // Build structured response
       const structuredData = {
+        job_info: {
+          job_id: jobId,
+          user_id: documentJob?.data?.userId ?? null,
+          file_name: documentJob?.data?.fileName ?? null,
+          status: status.status,
+        },
         patient_info: {
           first_name: documentData?.patient_info?.first_name ?? null,
           last_name: documentData?.patient_info?.last_name ?? null,
