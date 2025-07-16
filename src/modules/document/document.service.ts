@@ -186,6 +186,18 @@ export class DocumentService {
         return null;
       }
 
+      // Get job details for additional metadata
+      const allJobs = await this.medicalQueue.getJobs([
+        'waiting',
+        'active',
+        'completed',
+        'failed',
+      ]);
+
+      const documentJob = allJobs.find(
+        (job) => job.data.jobId === jobId && job.name === JOB_TYPES.PROCESS_DOCUMENT,
+      );
+
       // Extract data from the results
       const documentData = results.summary?.data || results.summary || {};
       const physicianData = results.physicianMatch?.data || {};
@@ -235,6 +247,12 @@ export class DocumentService {
 
       // Build structured response
       const structuredData = {
+        job_info: {
+          job_id: jobId,
+          user_id: documentJob?.data?.userId ?? null,
+          file_name: documentJob?.data?.fileName ?? null,
+          status: status.status,
+        },
         patient_info: {
           first_name: documentData?.patient_info?.first_name ?? null,
           last_name: documentData?.patient_info?.last_name ?? null,
@@ -415,5 +433,66 @@ export class DocumentService {
         error: error.message,
       };
     }
+  }
+
+  async generateLabReportsCsv(jobId: string): Promise<string | null> {
+    try {
+      const structuredResults = await this.getResultStructure(jobId);
+
+      if (!structuredResults || !structuredResults.lab_reports) {
+        return null;
+      }
+
+      const labReports = structuredResults.lab_reports;
+
+      // CSV header with 10 columns as specified
+      const headers = 'Parameter,Result,Unit,Range,comment,Parameter Matched,Result,Unit,Range,comment';
+      
+      // Generate CSV rows
+      const rows = labReports.map((report: any) => {
+        const testParams = report.test_params || {};
+        const matchData = report.match_data || {};
+
+        // Create row with 6 populated columns + 4 empty columns
+        const row = [
+          this.escapeCsvValue(testParams.name || ''),
+          this.escapeCsvValue(testParams.result || ''),
+          this.escapeCsvValue(testParams.units || ''),
+          this.escapeCsvValue(testParams.range || ''),
+          this.escapeCsvValue(testParams.comment || testParams.comment_english || ''),
+          this.escapeCsvValue(matchData.matched_parameter || ''),
+          '', // Empty Result column
+          '', // Empty Unit column
+          '', // Empty Range column
+          ''  // Empty comment column
+        ];
+
+        return row.join(',');
+      });
+
+      // Combine header and rows
+      const csvContent = [headers, ...rows].join('\n');
+
+      this.logger.log(`Generated CSV for job ${jobId} with ${labReports.length} lab reports`);
+      return csvContent;
+    } catch (error) {
+      this.logger.error(`Failed to generate CSV for job ${jobId}:`, error);
+      throw error;
+    }
+  }
+
+  private escapeCsvValue(value: any): string {
+    if (value === null || value === undefined) {
+      return '';
+    }
+
+    const stringValue = String(value);
+    
+    // If the value contains comma, quote, or newline, wrap in quotes and escape internal quotes
+    if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n') || stringValue.includes('\r')) {
+      return `"${stringValue.replace(/"/g, '""')}"`;
+    }
+
+    return stringValue;
   }
 }
