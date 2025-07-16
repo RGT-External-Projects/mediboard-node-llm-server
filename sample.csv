@@ -1,0 +1,36 @@
+file,,,,,,,,,,,,,summary
+Parameter,Result,Unit,Range,comment,Parameter Matched  ,Result,Unit,Range,comment,,,instiute,ichilov
+RBC,4.5,10e6/µL,3.8 - 5.1,,,,,,,,,parameters count FROM ORIGINAL FILE,34
+Hemoglobia,137,g/dL,11.7 - 15.5,,,,,,,,,time,manual upload time
+HCT,41,%,35 - 45,,,,,,,,,,ocr upload time
+MCV,92.1,fL,80.0 - 96.0,,,,,,,,,,% time spared
+MCH,31,pg,26.0 - 34.0,,,,,,,,,accuracy,unextracted parameters
+MCHC,33.6,g/dL,31.0 - 37.0,,,,,,,,,,missing data
+RDW,13.9,%,0.0 - 15.0,,,,,,,,,,wrong extraction
+NRBC/100 WBC,0,%,,,,,,,,,,,wrong value type
+WBC,6.5,10e3/µL,4.0 - 11.0,,,,,,,,,,parameter missmatch
+Neutrophils %,60.3,%,40.0 - 75.0,,,,,,,,,overall FIELDS needed correction,
+Neutrophils No.,3.9,10e3/µL,1.4 - 6.0,,,,,,,,,overall accuracy,
+Lymphocytes %,31.5,%,20.0 - 40.0,,,,,,,,,,
+Lymphocytes No,2,10e3/µL,1.2 - 3.0,,,,,,,,,,
+Mono%,6.8,%,2.0 - 13.0,,,,,,,,,,
+Monocytes No.,0.4,10e3/µL,0.0 - 1.3,,,,,,,,,,
+Eosinophils %,0.8,%,0.0 - 6.0,,,,,,,,,,
+Eosinophils No.,0.1,10e3/µL,0.0 - 0.4,,,,,,,,,,
+Basophils%,0.6,%,0.0 - 1.9,,,,,,,,,,
+Basophils No.,0,10e3/µL,0.0 - 0.2,,,,,,,,,,
+"Platelet, automated count",235,10e3/µL,150 - 450,,,,,,,,,,
+Mean platelet volume,8.3,fL,7.0 - 12.0,,,,,,,,,,
+Neutrophils/lymphocytes ratio - blood,2,,,,,,,,,,,,
+Glucose - blood,108,mg/dL,70 - 110,,,,,,,,,,
+Urea nitrogen (BUN) - blood,12,mg/dL,<5 - 25,,,,,,,,,,
+Sodium - blood,143,mmol/L,135.0 - 146.0,,,,,,,,,,
+Potassium - blood,3.84,mmol/L,3.50 - 5.30,,,,,,,,,,
+Chloride - blood,108,mmol/L,95 - 110,,,,,,,,,,
+Creatinine,0.63,mg/dL,0.60 - 1.10,,,,,,,,,,
+CRP (WIDE RANGE),2.48,mg\L,<0.03 - 5.00,,,,,,,,,,
+di-Dimer FEU,0.36,FEU mg/L,0.00 - 0.49,,,,,,,,,,
+"PT, Sec - blood",10.2,%,10.03 - 12.43,,,,,,,,,,
+"PT, INR",0.95,,0.97 - 1.19,,,,,,,,,,
+PTT,25.5,Sec,25.00 - 34.00,,,,,,,,,,
+Fibrinogen,295.6,mg/dL,190.00 - 470.00,,,,,,,,,,

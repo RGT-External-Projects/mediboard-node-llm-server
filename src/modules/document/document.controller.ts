@@ -12,6 +12,7 @@ import {
   HttpException,
   UsePipes,
   ValidationPipe,
+  Response,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { 
@@ -524,6 +525,90 @@ export class DocumentController {
       throw new HttpException(
         `Health check failed: ${error.message}`,
         HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
+  }
+
+  @Get('csv/:jobId')
+  @ApiOperation({ 
+    summary: 'Export lab reports as CSV',
+    description: 'Export lab reports from a completed job as a CSV file. The CSV includes parameter details and matching information in the format: Parameter, Result, Unit, Range, comment, Parameter Matched, followed by 4 empty columns for additional data entry.',
+  })
+  @ApiParam({ 
+    name: 'jobId', 
+    description: 'Job ID to export lab reports for',
+    example: 'job_123456789',
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'CSV file generated successfully',
+    headers: {
+      'Content-Type': {
+        description: 'MIME type of the response',
+        schema: { type: 'string', example: 'text/csv' }
+      },
+      'Content-Disposition': {
+        description: 'Attachment header for file download',
+        schema: { type: 'string', example: 'attachment; filename="lab_report_job_123456789.csv"' }
+      }
+    },
+    schema: {
+      type: 'string',
+      format: 'binary',
+      example: 'Parameter,Result,Unit,Range,comment,Parameter Matched,Result,Unit,Range,comment\nRBC,4.5,10e6/µL,3.8 - 5.1,,RBC - blood,,,,'
+    }
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'Job not found, not completed, or no lab reports available',
+    type: ErrorResponseDto,
+    schema: {
+      example: {
+        success: false,
+        message: 'Job not found or not completed',
+        statusCode: 404,
+        timestamp: '2025-01-15T10:30:00Z',
+        path: '/documents/csv/job_123456789',
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 500, 
+    description: 'Internal server error',
+    type: ErrorResponseDto,
+    schema: {
+      example: {
+        success: false,
+        message: 'Failed to generate CSV: Processing error',
+        statusCode: 500,
+        timestamp: '2025-01-15T10:30:00Z',
+        path: '/documents/csv/job_123456789',
+      }
+    }
+  })
+  async exportLabReportsCsv(@Param('jobId') jobId: string, @Response() res: any) {
+    try {
+      const csvContent = await this.documentService.generateLabReportsCsv(jobId);
+      
+      if (!csvContent) {
+        throw new HttpException('Job not found, not completed, or no lab reports available', HttpStatus.NOT_FOUND);
+      }
+
+      // Set headers for CSV download
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="lab_report_${jobId}.csv"`);
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Pragma', 'no-cache');
+
+      // Send CSV content
+      res.send(csvContent);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        `Failed to generate CSV: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
