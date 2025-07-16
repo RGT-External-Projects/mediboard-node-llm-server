@@ -181,3 +181,4 @@ examples/
 # Development files
 .env.development
 .env.local
+.history/

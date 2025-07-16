@@ -16,4 +16,4 @@ scripts
 
 # System files
 .DS_Store
-
+.history/
