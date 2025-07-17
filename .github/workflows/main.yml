@@ -29,10 +29,6 @@ jobs:
 
       - name: Build Application
         run: npm run build
-
-  # =================================================================
-  # Job 2: Build and Deploy to Production
-  # =================================================================
   build-and-deploy:
     name: Build Docker Image and Deploy to EC2
     runs-on: ubuntu-latest
