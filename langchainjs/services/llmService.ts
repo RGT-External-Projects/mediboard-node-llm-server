@@ -97,7 +97,7 @@ export class LLMService {
 
       // Step 1: Parse document with enhanced LlamaParseService
       const parseConfig = {
-        vendorMultimodalModelName: "anthropic-sonnet-3.7",
+        vendorMultimodalModelName: "anthropic-sonnet-4.0",
         parseMode: "parse_page_with_lvm",
         structuredOutput: false,
         disableOcr: false,
