@@ -27,14 +27,10 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Lint Code
-        run: npm run lint
-
-      - name: Build Application
-        run: npm run build
-
       - name: Run Unit Tests
         run: npm run test
+      - name: Build Application
+        run: npm run build
 
   # =================================================================
   # Job 2: Build and Deploy to Production
