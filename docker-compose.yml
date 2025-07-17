@@ -1,14 +1,51 @@
-version: '3.8'
-
 services:
-  # Medical Processing Service
-  medical-processing-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: medical-processing-app
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    command:
+      - '--providers.docker=true'
+      - '--providers.docker.exposedbydefault=false'
+      - '--entrypoints.web.address=:80'
+      - '--entrypoints.websecure.address=:443'
+      - '--certificatesresolvers.myresolver.acme.tlschallenge=true'
+      - '--certificatesresolvers.myresolver.acme.email=razaka@reallygreattech.com'
+      - '--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json'
     ports:
-      - "3000:3000"
+      - '80:80'
+      - '443:443'
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock:ro'
+      - 'traefik_letsencrypt:/letsencrypt'
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: eu-central-1
+        awslogs-group: /aws/mediboard/nodellm/service/
+        awslogs-create-group: 'true'
+        awslogs-stream: 'traefik-{{.Name}}-{{.ID}}'
+
+    restart: unless-stopped
+    networks:
+      - medical-network
+
+  medical-processing-service:
+    image: 087264100053.dkr.ecr.eu-central-1.amazonaws.com/mediboard-node-llm:${IMAGE_TAG:-latest}
+    container_name: medical-processing-app
+    labels:
+      - 'traefik.enable=true'
+
+      - 'traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https'
+
+      - 'traefik.http.routers.medical-app-http.rule=Host(`api-nodellm.mediboard.ai`)'
+      - 'traefik.http.routers.medical-app-http.entrypoints=web'
+      - 'traefik.http.routers.medical-app-http.middlewares=redirect-to-https'
+
+      - 'traefik.http.routers.medical-app-secure.rule=Host(`api-nodellm.mediboard.ai`)'
+      - 'traefik.http.routers.medical-app-secure.entrypoints=websecure'
+      - 'traefik.http.routers.medical-app-secure.tls.certresolver=myresolver'
+      - 'traefik.http.routers.medical-app-secure.service=medical-app-service'
+
+      - 'traefik.http.services.medical-app-service.loadbalancer.server.port=3000'
     environment:
       - NODE_ENV=production
       - PORT=3000
@@ -36,26 +73,52 @@ services:
       # Webhook URLs (optional)
       - WEBHOOK_URLS=${WEBHOOK_URLS:-}
     volumes:
-      # Persistent storage for uploads and results
       - uploads_data:/app/uploads
       - results_data:/app/results
-      - logs_data:/app/logs
-    healthcheck:
-      test: ["CMD", "node", "/app/healthcheck.js"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: eu-central-1
+        awslogs-group: /aws/mediboard/nodellm/service/
+        awslogs-create-group: 'true'
+        awslogs-stream: 'app-{{.Name}}-{{.ID}}'
     restart: unless-stopped
+    depends_on:
+      redis-cache:
+        condition: service_healthy
     networks:
       - medical-network
+
+  redis-cache:
+    image: redis:8-alpine
+    container_name: redis-cache-container
+    restart: unless-stopped
+    command: redis-server --ignore-warnings "ARM64-COW-BUG"
+    volumes:
+      - redis_data:/data
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: eu-central-1
+        awslogs-group: /aws/mediboard/nodellm/service/
+        awslogs-create-group: 'true'
+        awslogs-stream: 'redis-{{.Name}}-{{.ID}}'
+    networks:
+      - medical-network
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   uploads_data:
     driver: local
   results_data:
     driver: local
-  logs_data:
+  traefik_letsencrypt:
+    driver: local
+  redis_data:
     driver: local
 
 networks:

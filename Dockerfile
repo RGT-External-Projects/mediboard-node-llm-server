@@ -10,16 +10,12 @@ RUN apk add --no-cache python3 make g++
 
 # Copy package files
 COPY package*.json ./
-# COPY tsconfig*.json ./
-# COPY nest-cli.json ./
 
 # Install all dependencies (including dev dependencies for build)
 RUN npm ci --only=production=false
 
 # Copy source code
 COPY . .
-# COPY src/ ./src/
-# COPY langchainjs/ ./langchainjs/
 
 # Build the application
 RUN npm run build
