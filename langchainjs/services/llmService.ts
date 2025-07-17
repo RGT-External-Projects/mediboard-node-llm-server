@@ -82,7 +82,8 @@ export class LLMService {
   /**
    * Get document summary using LlamaParseReader and LLM
    */
-  async getDocumentSummary(request: DocumentSummaryRequest): Promise<ProcessingResult> {
+  async getDocumentSummary(request: DocumentSummaryRequest & { 
+  }): Promise<ProcessingResult> {
     try {
       if (!this.isInitialized) {
         return {
@@ -94,8 +95,17 @@ export class LLMService {
 
       console.log(`Processing document: ${request.filePath}`);
 
-      // Step 1: Parse document with LlamaParseReader
-      const parseResult = await this.llamaParseService.parseDocument(request.filePath);
+      // Step 1: Parse document with enhanced LlamaParseService
+      const parseConfig = {
+        vendorMultimodalModelName: "anthropic-sonnet-4.0",
+        parseMode: "parse_page_with_lvm",
+        structuredOutput: false,
+        disableOcr: false,
+        adaptiveLongTable: true,
+        timeout: 300000,
+      };
+
+      const parseResult = await this.llamaParseService.parseDocument(request.filePath, parseConfig);
       if (!parseResult.success) {
         return {
           status: false,
@@ -140,6 +150,7 @@ export class LLMService {
         userId: request.userId,
         extractedData: extractionResult.data,
         markdownLength: markdownContent.length,
+        llamaParseConfig: parseConfig,
       };
 
       fs.writeFileSync(outputFile, JSON.stringify(resultData, null, 2));
@@ -148,7 +159,10 @@ export class LLMService {
       return {
         status: true,
         message: 'Document summary successfully retrieved.',
-        data: extractionResult.data,
+        data: {
+          ...extractionResult.data,
+          markdownContent: markdownContent,
+        },
       };
     } catch (error) {
       console.error('Error in getDocumentSummary:', error);

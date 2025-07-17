@@ -5,6 +5,7 @@ import { ProcessingService } from './services/processing.service';
 import { QUEUE_NAMES } from '../../types';
 import { LangChainModule } from '../langchain/langchain.module';
 import { WebhookModule } from '../webhook/webhook.module';
+import { DocumentModule } from '../document/document.module';
 
 @Module({
   imports: [
@@ -29,6 +30,9 @@ import { WebhookModule } from '../webhook/webhook.module';
     
     // Import Webhook services
     WebhookModule,
+    
+    // Import Document services
+    DocumentModule,
   ],
   providers: [
     ProcessingService,
