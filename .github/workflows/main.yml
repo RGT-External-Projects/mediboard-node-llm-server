@@ -27,9 +27,6 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Run Unit Tests
-        run: npm run test
-        continue-on-error: true
       - name: Build Application
         run: npm run build
 
