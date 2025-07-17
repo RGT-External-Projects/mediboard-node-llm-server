@@ -84,7 +84,7 @@ jobs:
             "aws secretsmanager get-secret-value --secret-id ${{ secrets.AWS_SECRET_ARN }} --region ${{ secrets.AWS_REGION }} --query SecretString --output text > .env",
             "echo --- Environment variables configured ---",
             "export DOCKER_IMAGE=${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.AWS_ECR_REPOSITORY }}:${{env.IMAGE_TAG}}",
-            "export IMAGE_TAG=${{env.IMAGE_TAG}}"
+            "export IMAGE_TAG=${{env.IMAGE_TAG}}",
             "echo --- Logging into ECR ---",
             "echo --- Pulling latest image: $DOCKER_IMAGE ---",
             "docker compose pull",
