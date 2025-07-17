@@ -618,4 +618,88 @@ export class DocumentController {
       );
     }
   }
+
+  @Get('markdown/:jobId')
+  @ApiOperation({ 
+    summary: 'Export document markdown content',
+    description: 'Export the original markdown content extracted from a completed job as a downloadable .md file. This provides access to the raw document content that was processed by the LlamaParseReader.',
+  })
+  @ApiParam({ 
+    name: 'jobId', 
+    description: 'Job ID to export markdown content for',
+    example: 'job_123456789',
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Markdown file generated successfully',
+    headers: {
+      'Content-Type': {
+        description: 'MIME type of the response',
+        schema: { type: 'string', example: 'text/markdown' }
+      },
+      'Content-Disposition': {
+        description: 'Attachment header for file download',
+        schema: { type: 'string', example: 'attachment; filename="document_job_123456789.md"' }
+      }
+    },
+    schema: {
+      type: 'string',
+      format: 'binary',
+      example: '# Document Title\n\nThis is the markdown content extracted from the document...'
+    }
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'Job not found, not completed, or no markdown content available',
+    type: ErrorResponseDto,
+    schema: {
+      example: {
+        success: false,
+        message: 'Job not found, not completed, or no markdown content available',
+        statusCode: 404,
+        timestamp: '2025-01-15T10:30:00Z',
+        path: '/documents/markdown/job_123456789',
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 500, 
+    description: 'Internal server error',
+    type: ErrorResponseDto,
+    schema: {
+      example: {
+        success: false,
+        message: 'Failed to retrieve markdown content: Processing error',
+        statusCode: 500,
+        timestamp: '2025-01-15T10:30:00Z',
+        path: '/documents/markdown/job_123456789',
+      }
+    }
+  })
+  async exportMarkdownContent(@Param('jobId') jobId: string, @Response() res: any) {
+    try {
+      const markdownContent = await this.documentService.getMarkdownContent(jobId);
+      
+      if (!markdownContent) {
+        throw new HttpException('Job not found, not completed, or no markdown content available', HttpStatus.NOT_FOUND);
+      }
+
+      // Set headers for markdown download
+      res.setHeader('Content-Type', 'text/markdown');
+      res.setHeader('Content-Disposition', `attachment; filename="document_${jobId}.md"`);
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Pragma', 'no-cache');
+
+      // Send markdown content
+      res.send(markdownContent);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        `Failed to retrieve markdown content: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }
