@@ -86,6 +86,7 @@ jobs:
             "export DOCKER_IMAGE=${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.AWS_ECR_REPOSITORY }}:${{env.IMAGE_TAG}}",
             "export IMAGE_TAG=${{env.IMAGE_TAG}}",
             "echo --- Logging into ECR ---",
+            "aws ecr get-login-password --region '"${{ secrets.AWS_REGION }}"' | docker login --username AWS --password-stdin '"${{ secrets.AWS_ECR_REGISTRY }}"'",
             "echo --- Pulling latest image: $DOCKER_IMAGE ---",
             "docker compose pull",
             "docker compose up -d --force-recreate --remove-orphans",
