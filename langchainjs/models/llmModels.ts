@@ -120,16 +120,9 @@ export function createOpenAIConfig(
 }
 
 export function createClaudeConfig(
-  modelName: string = 'claude-4-sonnet-20250514',
-  /**
-   * The temperature parameter controls the randomness of the LLM's output.
-   * Lower values (e.g., 0.1) make the model more deterministic and focused,
-   * while higher values increase creativity and variability in responses.
-   * In LLM usage, setting temperature to 0.1 is common for extraction or structured tasks
-   * to ensure consistent and reliable outputs.
-   */
+  modelName: string = 'claude-3-7-sonnet-latest',
   temperature: number = 0.1,
-  maxTokens: number = 32768,
+  maxTokens: number = 16384,
 ): ModelConfig {
   return {
     type: ModelType.CLAUDE,
