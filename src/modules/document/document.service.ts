@@ -122,6 +122,7 @@ export class DocumentService {
           results.physicianMatch = jobResult.data.physicianMatch;
           results.facilityMatch = jobResult.data.facilityMatch;
           results.labMatches = jobResult.data.labMatches;
+          results.markdownContent = jobResult.data.markdownContent;
         }
       }
 
@@ -604,6 +605,35 @@ export class DocumentService {
     } catch (error) {
       this.logger.error(`Failed to generate webhook payload for job ${jobId}:`, error);
       return null;
+    }
+  }
+
+  async getMarkdownContent(jobId: string): Promise<string | null> {
+    try {
+      const status = await this.getProcessingStatus(jobId);
+
+      if (!status || status.status !== 'completed') {
+        return null;
+      }
+
+      const results = status.results;
+      if (!results) {
+        return null;
+      }
+
+      // Extract markdown content from the results
+      const markdownContent = (results as any).summary?.markdownContent || (results as any).markdownContent;
+
+      if (!markdownContent || typeof markdownContent !== 'string') {
+        this.logger.warn(`No markdown content found for job ${jobId}`);
+        return null;
+      }
+
+      this.logger.log(`Retrieved markdown content for job ${jobId}, length: ${markdownContent.length}`);
+      return markdownContent;
+    } catch (error) {
+      this.logger.error(`Failed to get markdown content for job ${jobId}:`, error);
+      throw error;
     }
   }
 }

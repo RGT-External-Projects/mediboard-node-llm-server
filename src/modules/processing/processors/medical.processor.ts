@@ -121,6 +121,7 @@ export class MedicalProcessor {
         physicianMatch,
         facilityMatch,
         labMatches,
+        markdownContent: documentSummary.data?.markdownContent || null,
         processingStats: {
           totalLabParameters: extractedData.lab_reports?.length || 0,
           successfulLabMatches: labMatches?.length || 0,

@@ -87,6 +87,27 @@ export interface LlamaParseConfig {
   model: string;
 }
 
+export interface LlamaParseApiConfig {
+  parseMode?: string;
+  vendorMultimodalModelName?: string;
+  structuredOutput?: boolean;
+  disableOcr?: boolean;
+  disableImageExtraction?: boolean;
+  adaptiveLongTable?: boolean;
+  annotateLinks?: boolean;
+  doNotUnrollColumns?: boolean;
+  htmlMakeAllElementsVisible?: boolean;
+  htmlRemoveNavigationElements?: boolean;
+  htmlRemoveFixedElements?: boolean;
+  guessXlsxSheetName?: boolean;
+  doNotCache?: boolean;
+  invalidateCache?: boolean;
+  outputPdfOfDocument?: boolean;
+  takeScreenshot?: boolean;
+  isFormattingInstruction?: boolean;
+  timeout?: number;
+}
+
 export interface JobStatus {
   id: string;
   status: 'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED';
