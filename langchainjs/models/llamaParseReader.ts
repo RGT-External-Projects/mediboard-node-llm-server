@@ -1,7 +1,6 @@
-import { LlamaParseReader } from 'llamaindex';
-import * as fs from 'fs';
-import { LlamaParseConfig, ApiResponse } from '../utils/types';
-import pLimit from 'p-limit';
+import { LlamaParseReader } from "llamaindex";
+import * as fs from "fs";
+import { LlamaParseConfig, ApiResponse } from "../utils/types";
 
 export class LlamaParseService {
   private reader: LlamaParseReader;
@@ -9,9 +8,9 @@ export class LlamaParseService {
   constructor(apiKey: string) {
     this.reader = new LlamaParseReader({
       apiKey,
-      resultType: 'markdown',
-      parse_mode: 'parse_document_with_agent',
-      model: 'anthropic-sonnet-4.0',
+      resultType: "markdown",
+      parse_mode: "parse_document_with_agent",
+      model: "anthropic-sonnet-4.0",
     } as any);
   }
 
@@ -24,47 +23,49 @@ export class LlamaParseService {
       console.log(`Parsing document: ${filePath}`);
 
       // Check if it's a local file
-      if (!filePath.startsWith('http') && !fs.existsSync(filePath)) {
+      if (!filePath.startsWith("http") && !fs.existsSync(filePath)) {
         return {
           success: false,
-          error: `File not found: ${filePath}`
+          error: `File not found: ${filePath}`,
         };
       }
 
       // Use LlamaParseReader to load and parse documents
       const documents = await this.reader.loadData(filePath);
-      
+
       if (!documents || documents.length === 0) {
         return {
           success: false,
-          error: 'No documents were parsed from the file'
+          error: "No documents were parsed from the file",
         };
       }
 
       // Extract markdown content from documents
       const markdown = documents
-        .map((doc: any) => doc.text || doc.content || '')
-        .join('\n\n');
+        .map((doc: any) => doc.text || doc.content || "")
+        .join("\n\n");
 
-      if (!markdown.trim()) {
-        return {
-          success: false,
-          error: 'No content extracted from the document'
-        };
-      }
+      // if (!markdown.trim()) {
+      //   return {
+      //     success: false,
+      //     error: "No content extracted from the document",
+      //   };
+      // }
 
-      console.log(`Document parsed successfully. Content length: ${markdown.length} characters`);
+      console.log(
+        `Document parsed successfully. Content length: ${markdown.length} characters`
+      );
 
       return {
         success: true,
-        data: markdown
+        data: markdown,
       };
-
     } catch (error) {
-      console.error('Error parsing document:', error);
+      console.error("Error parsing document:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred'
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
       };
     }
   }

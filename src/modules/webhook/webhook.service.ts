@@ -6,7 +6,60 @@ export interface WebhookPayload {
   userId: string;
   fileName: string;
   timestamp: string;
-  data?: any;
+  data?: {
+    job_info: {
+      job_id: string;
+      user_id: string;
+      file_name: string;
+      status: string;
+    };
+    patient_info: {
+      first_name: string | null;
+      last_name: string | null;
+    };
+    physician_info: {
+      first_name: string | null;
+      last_name: string | null;
+      match_data: {
+        id: number | null;
+        title: string;
+        name: string;
+        lastname: string;
+      };
+      match_info: any;
+    };
+    medical_facility: {
+      facility_name: string | null;
+      location: string | null;
+      match_data: {
+        id: number | null;
+        value: string;
+        displayName: string;
+      };
+      match_info: any;
+    };
+    lab_reports: Array<{
+      test_params: {
+        index?: string;
+        name: string;
+        result_value_type: string;
+        result: any;
+        range: string;
+        units: string;
+        test_type?: string;
+        comment: string | null;
+        comment_english: string | null;
+      };
+      match_data: {
+        id: number | null;
+        matched_parameter: string;
+      };
+      match_info: any;
+      parameter_value_type: string;
+    }>;
+    is_lab_report: boolean;
+    test_date: string | null;
+  };
   error?: string;
 }
 
@@ -35,7 +88,7 @@ export class WebhookService {
   // In-memory arrays for webhook URLs
   private webhookUrls: string[] = [
     // Default webhook URLs - can be modified at runtime
-    "http://localhost:3001/webhooks/job-status",
+    "http://localhost:4200/api/webhook/ocr2",
     "https://api-dev.mediboard.ai/api/webhook/ocr2",
   ];
 

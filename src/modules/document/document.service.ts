@@ -495,4 +495,115 @@ export class DocumentService {
 
     return stringValue;
   }
+
+  async generateWebhookPayload(jobId: string, rawResults: any): Promise<any | null> {
+    try {
+      // Get job details for metadata
+      const allJobs = await this.medicalQueue.getJobs([
+        'waiting',
+        'active',
+        'completed',
+        'failed',
+      ]);
+
+      const documentJob = allJobs.find(
+        (job) => job.data.jobId === jobId && job.name === JOB_TYPES.PROCESS_DOCUMENT,
+      );
+
+      if (!documentJob) {
+        this.logger.warn(`Job not found for webhook payload generation: ${jobId}`);
+        return null;
+      }
+
+      // Extract data from the raw results (same structure as in getResultStructure)
+      const documentData = rawResults.summary?.data || rawResults.summary || {};
+      const physicianData = rawResults.physicianMatch?.data || {};
+      const institutionData = rawResults.facilityMatch?.data || {};
+      const labReportsData = rawResults.labMatches || [];
+
+      // Transform lab reports data (same logic as getResultStructure)
+      const transformedLabReports = labReportsData
+        // Filter out reports that don't have test_params structure
+        .filter((report: any) => report.data?.test_params?.name != null && report.data?.test_params?.name.trim() !== '')
+        // Sort lab reports by their index property in ascending order (lowest to highest)
+        .sort((a: any, b: any) => {
+          const indexA = a.data?.test_params?.index ?? a.data?.index ?? 0;
+          const indexB = b.data?.test_params?.index ?? b.data?.index ?? 0;
+          return parseInt(indexA) - parseInt(indexB);
+        })
+        .map((report: any) => {
+          const reportData = report.data || report;
+          const testParams = reportData.test_params || {};
+          
+          // Handle negative_positive value type
+          if (
+            (testParams.result_value_type === "negative_positive" || 
+             reportData.parameter_value_type === "negative_positive") && 
+            testParams.result
+          ) {
+            const result = String(testParams.result).toLowerCase();
+            if (result.includes("positive")) {
+              testParams.result = "positive";
+            } else if (result.includes("negative")) {
+              testParams.result = "negative";
+            } else {
+              testParams.result = null;
+            }
+          }
+          
+          return {
+            test_params: testParams,
+            match_data: {
+              id: reportData.matched_id === 0 ? null : reportData.matched_id,
+              matched_parameter: reportData.matched_parameter,
+            },
+            match_info: reportData.match_info,
+            parameter_value_type: testParams.result_value_type || reportData.parameter_value_type || "",
+          };
+        });
+
+      // Build structured webhook payload (same structure as getResultStructure)
+      const webhookData = {
+        job_info: {
+          job_id: jobId,
+          user_id: documentJob.data.userId,
+          file_name: documentJob.data.fileName,
+          status: 'completed',
+        },
+        patient_info: {
+          first_name: documentData?.patient_info?.first_name ?? null,
+          last_name: documentData?.patient_info?.last_name ?? null,
+        },
+        physician_info: {
+          first_name: documentData?.physician_info?.first_name ?? null,
+          last_name: documentData?.physician_info?.last_name ?? null,
+          match_data: {
+            id: physicianData.matched_id === 0 ? null : physicianData.matched_id,
+            title: physicianData.matched_title,
+            name: physicianData.matched_name,
+            lastname: physicianData.matched_lastname,
+          },
+          match_info: physicianData.match_info,
+        },
+        medical_facility: {
+          facility_name: documentData?.medical_facility?.facility_name ?? null,
+          location: documentData?.medical_facility?.location ?? null,
+          match_data: {
+            id: institutionData.matched_id === 0 ? null : institutionData.matched_id,
+            value: institutionData.value_name,
+            displayName: institutionData.matched_display_name,
+          },
+          match_info: institutionData.match_info,
+        },
+        lab_reports: transformedLabReports,
+        is_lab_report: documentData.is_lab_report,
+        test_date: documentData?.test_date ?? null,
+      };
+
+      return webhookData;
+    } catch (error) {
+      this.logger.error(`Failed to generate webhook payload for job ${jobId}:`, error);
+      return null;
+    }
+  }
 }

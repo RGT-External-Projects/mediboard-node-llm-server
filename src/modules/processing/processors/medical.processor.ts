@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { Job } from 'bull';
 import { LangChainService } from '../../langchain/langchain.service';
 import { WebhookService, WebhookPayload } from '../../webhook/webhook.service';
+import { DocumentService } from '../../document/document.service';
 import {
   DocumentProcessingData,
   QUEUE_NAMES,
@@ -17,6 +18,7 @@ export class MedicalProcessor {
   constructor(
     private readonly langChainService: LangChainService,
     private readonly webhookService: WebhookService,
+    private readonly documentService: DocumentService,
   ) {}
 
   @Process(JOB_TYPES.PROCESS_DOCUMENT)
@@ -165,14 +167,17 @@ export class MedicalProcessor {
         `Complete document processing finished for job: ${jobId} in ${processingTime}ms`,
       );
 
-      // Fire success webhook
+      // Generate structured webhook payload
+      const structuredWebhookData = await this.documentService.generateWebhookPayload(jobId, finalResults);
+      
+      // Fire success webhook with structured data
       const successPayload: WebhookPayload = {
         jobId,
         status: 'success',
         userId,
         fileName,
         timestamp: new Date().toISOString(),
-        data: finalResults,
+        data: structuredWebhookData,
       };
 
       // Fire webhooks asynchronously (don't wait for completion)
