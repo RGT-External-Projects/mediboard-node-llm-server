@@ -20,7 +20,7 @@ export class LlamaParseApiService {
   private apiKey: string;
   private baseUrl = "https://api.cloud.llamaindex.ai/api/parsing";
   private parseCache = new Map<string, { result: Promise<ApiResponse<string>>; timestamp: number }>();
-  private cacheTimeout = 5 * 60 * 1000; // 5 minutes cache
+  private cacheTimeout = 10 * 60 * 1000; // 10 minutes cache
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
