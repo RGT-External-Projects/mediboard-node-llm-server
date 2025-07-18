@@ -102,7 +102,7 @@ export class LLMService {
         structuredOutput: false,
         disableOcr: false,
         adaptiveLongTable: true,
-        timeout: 300000,
+        timeout: 480000,
       };
 
       const parseResult = await this.llamaParseService.parseDocument(request.filePath, parseConfig);
