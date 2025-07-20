@@ -5,12 +5,16 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { DocumentController } from './document.controller';
 import { DocumentService } from './document.service';
+import { S3Module } from '../s3/s3.module';
 import { QUEUE_NAMES } from '../../types';
 import * as multer from 'multer';
 import * as path from 'path';
 
 @Module({
   imports: [
+    // S3 Module for file downloads
+    S3Module,
+
     // Register the single medical processing queue
     BullModule.registerQueue({
       name: QUEUE_NAMES.MEDICAL_PROCESSING,

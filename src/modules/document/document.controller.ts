@@ -29,6 +29,8 @@ import { DocumentService } from './document.service';
 import {
   ProcessDocumentDto,
   ProcessDocumentResponseDto,
+  ProcessS3DocumentDto,
+  ProcessS3DocumentResponseDto,
   ProcessingStatusResponseDto,
   JobListQueryDto,
   JobListResponseDto,
@@ -187,6 +189,157 @@ export class DocumentController {
     } catch (error) {
       throw new HttpException(
         `Failed to queue document processing: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('process-s3')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  @ApiOperation({ 
+    summary: 'Process a medical document from S3',
+    description: 'Process a medical document stored in S3 for AI-powered processing. The document will be downloaded from S3 and analyzed to extract patient information, physician details, medical facility information, and lab test results with parameter matching.',
+  })
+  @ApiBody({
+    description: 'S3 document processing parameters',
+    type: ProcessS3DocumentDto,
+    schema: {
+      type: 'object',
+      properties: {
+        fileKey: {
+          type: 'string',
+          description: 'S3 file key/path to the document to process',
+          example: 'documents/medical-report.pdf',
+        },
+        userId: {
+          type: 'string',
+          description: 'User ID for processing context',
+          example: 'user123',
+        },
+        language: {
+          type: 'string',
+          description: 'Processing language (default: en)',
+          enum: ['en', 'he'],
+          default: 'en',
+        },
+      },
+      required: ['fileKey', 'userId'],
+    },
+  })
+  @ApiResponse({ 
+    status: 201, 
+    description: 'S3 document processing job created successfully',
+    type: ProcessS3DocumentResponseDto,
+    schema: {
+      example: {
+        success: true,
+        message: 'S3 document processing job created successfully',
+        data: {
+          jobId: 'job_123456789',
+          status: 'queued',
+          createdAt: '2025-01-15T10:30:00Z',
+          downloadMetrics: {
+            duration: 1500,
+            fileSize: 2048576,
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Invalid S3 file key or request parameters',
+    type: ErrorResponseDto,
+    schema: {
+      example: {
+        success: false,
+        message: 'File type .txt is not allowed. Only PDF and image files are supported.',
+        statusCode: 400,
+        timestamp: '2025-01-15T10:30:00Z',
+        path: '/documents/process-s3',
+      },
+    },
+  })
+  @ApiResponse({ 
+    status: 413, 
+    description: 'File too large (max 10MB)',
+    type: ErrorResponseDto,
+    schema: {
+      example: {
+        success: false,
+        message: 'File size (15728640 bytes) exceeds the 10MB limit',
+        statusCode: 413,
+        timestamp: '2025-01-15T10:30:00Z',
+        path: '/documents/process-s3',
+      },
+    },
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'S3 file not found',
+    type: ErrorResponseDto,
+    schema: {
+      example: {
+        success: false,
+        message: 'Failed to queue S3 document processing: Failed to generate presigned URL: NoSuchKey',
+        statusCode: 404,
+        timestamp: '2025-01-15T10:30:00Z',
+        path: '/documents/process-s3',
+      },
+    },
+  })
+  @ApiResponse({ 
+    status: 422, 
+    description: 'Validation error',
+    type: ValidationErrorResponseDto,
+    schema: {
+      example: {
+        success: false,
+        message: 'Validation failed',
+        statusCode: 422,
+        timestamp: '2025-01-15T10:30:00Z',
+        path: '/documents/process-s3',
+        errors: ['fileKey should not be empty', 'userId should not be empty'],
+      },
+    },
+  })
+  @ApiResponse({ 
+    status: 500, 
+    description: 'Internal server error',
+    type: ErrorResponseDto,
+    schema: {
+      example: {
+        success: false,
+        message: 'Failed to queue S3 document processing: S3 service temporarily unavailable',
+        statusCode: 500,
+        timestamp: '2025-01-15T10:30:00Z',
+        path: '/documents/process-s3',
+      },
+    },
+  })
+  async processS3Document(
+    @Body() body: ProcessS3DocumentDto,
+  ) {
+    try {
+      const result = await this.documentService.queueS3DocumentProcessing({
+        fileKey: body.fileKey,
+        userId: body.userId,
+        language: body.language || 'en',
+      });
+
+      return {
+        success: true,
+        message: 'S3 document processing job created successfully',
+        data: {
+          jobId: result.jobId,
+          status: result.status,
+          createdAt: new Date().toISOString(),
+          downloadMetrics: result.downloadMetrics,
+        },
+      };
+    } catch (error) {
+      throw new HttpException(
+        `Failed to queue S3 document processing: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

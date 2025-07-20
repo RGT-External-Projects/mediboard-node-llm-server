@@ -89,7 +89,7 @@ export class WebhookService {
   private webhookUrls: string[] = [
     // Default webhook URLs - can be modified at runtime
     "http://localhost:4200/api/webhook/ocr2",
-    // "https://api-dev.mediboard.ai/api/webhook/ocr2",
+    "https://api-dev.mediboard.ai/api/webhook/ocr2",
     "https://api.mediboard.ai/api/webhook/ocr2",
   ];
 
