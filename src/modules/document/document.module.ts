@@ -6,6 +6,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { DocumentController } from './document.controller';
 import { DocumentService } from './document.service';
 import { S3Module } from '../s3/s3.module';
+import { LangChainModule } from '../langchain/langchain.module';
 import { QUEUE_NAMES } from '../../types';
 import * as multer from 'multer';
 import * as path from 'path';
@@ -14,6 +15,9 @@ import * as path from 'path';
   imports: [
     // S3 Module for file downloads
     S3Module,
+
+    // LangChain Module for vector store updates
+    LangChainModule,
 
     // Register the single medical processing queue
     BullModule.registerQueue({

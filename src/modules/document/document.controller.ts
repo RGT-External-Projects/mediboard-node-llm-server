@@ -37,6 +37,9 @@ import {
   ApiResponseDto,
   ErrorResponseDto,
   ValidationErrorResponseDto,
+  UpdateLabParametersDto,
+  UpdateDoctorsDto,
+  UpdateInstitutesDto,
 } from './dto';
 
 @ApiTags('documents')
@@ -851,6 +854,204 @@ export class DocumentController {
       }
       throw new HttpException(
         `Failed to retrieve markdown content: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('vector-stores/lab-parameters')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  @ApiOperation({ 
+    summary: 'Update lab parameters vector store',
+    description: 'Add new lab parameters to the vector store for improved matching during document processing. This endpoint allows you to expand the database of known lab parameters.',
+  })
+  @ApiBody({
+    description: 'Lab parameters to add to the vector store',
+    type: UpdateLabParametersDto,
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Lab parameters updated successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Lab parameters updated successfully',
+        data: {
+          status: true,
+          message: 'Lab parameters updated successfully',
+          data: true,
+        },
+      },
+    },
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Invalid lab parameters format',
+    type: ErrorResponseDto,
+    schema: {
+      example: {
+        success: false,
+        message: 'Invalid parameter format. Expected: {id: number, parameter: string}',
+        statusCode: 400,
+        timestamp: '2025-01-15T10:30:00Z',
+        path: '/documents/vector-stores/lab-parameters',
+      },
+    },
+  })
+  @ApiResponse({ 
+    status: 422, 
+    description: 'Validation error',
+    type: ValidationErrorResponseDto,
+  })
+  @ApiResponse({ 
+    status: 500, 
+    description: 'Internal server error',
+    type: ErrorResponseDto,
+  })
+  async updateLabParameters(@Body() body: UpdateLabParametersDto) {
+    try {
+      const result = await this.documentService.updateLabParameters(body.parameters);
+
+      return {
+        success: true,
+        message: 'Lab parameters updated successfully',
+        data: result,
+      };
+    } catch (error) {
+      throw new HttpException(
+        `Failed to update lab parameters: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('vector-stores/doctors')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  @ApiOperation({ 
+    summary: 'Update doctors vector store',
+    description: 'Add new doctors to the vector store for improved physician matching during document processing. This endpoint allows you to expand the database of known doctors.',
+  })
+  @ApiBody({
+    description: 'Doctors to add to the vector store',
+    type: UpdateDoctorsDto,
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Doctors updated successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Doctors updated successfully',
+        data: {
+          status: true,
+          message: 'Doctors updated successfully',
+          data: true,
+        },
+      },
+    },
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Invalid doctors format',
+    type: ErrorResponseDto,
+    schema: {
+      example: {
+        success: false,
+        message: 'Invalid doctor format. Expected: {id: number, doctorName: string, doctorLastName: string}',
+        statusCode: 400,
+        timestamp: '2025-01-15T10:30:00Z',
+        path: '/documents/vector-stores/doctors',
+      },
+    },
+  })
+  @ApiResponse({ 
+    status: 422, 
+    description: 'Validation error',
+    type: ValidationErrorResponseDto,
+  })
+  @ApiResponse({ 
+    status: 500, 
+    description: 'Internal server error',
+    type: ErrorResponseDto,
+  })
+  async updateDoctors(@Body() body: UpdateDoctorsDto) {
+    try {
+      const result = await this.documentService.updateDoctors(body.doctors);
+
+      return {
+        success: true,
+        message: 'Doctors updated successfully',
+        data: result,
+      };
+    } catch (error) {
+      throw new HttpException(
+        `Failed to update doctors: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('vector-stores/institutes')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  @ApiOperation({ 
+    summary: 'Update institutes vector store',
+    description: 'Add new medical institutes/facilities to the vector store for improved facility matching during document processing. This endpoint allows you to expand the database of known medical facilities.',
+  })
+  @ApiBody({
+    description: 'Institutes to add to the vector store',
+    type: UpdateInstitutesDto,
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Institutes updated successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Institutes updated successfully',
+        data: {
+          status: true,
+          message: 'Institutes updated successfully',
+          data: true,
+        },
+      },
+    },
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Invalid institutes format',
+    type: ErrorResponseDto,
+    schema: {
+      example: {
+        success: false,
+        message: 'Invalid institute format. Expected: {id: number, value: string, displayName?: string}',
+        statusCode: 400,
+        timestamp: '2025-01-15T10:30:00Z',
+        path: '/documents/vector-stores/institutes',
+      },
+    },
+  })
+  @ApiResponse({ 
+    status: 422, 
+    description: 'Validation error',
+    type: ValidationErrorResponseDto,
+  })
+  @ApiResponse({ 
+    status: 500, 
+    description: 'Internal server error',
+    type: ErrorResponseDto,
+  })
+  async updateInstitutes(@Body() body: UpdateInstitutesDto) {
+    try {
+      const result = await this.documentService.updateInstitutes(body.institutes);
+
+      return {
+        success: true,
+        message: 'Institutes updated successfully',
+        data: result,
+      };
+    } catch (error) {
+      throw new HttpException(
+        `Failed to update institutes: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

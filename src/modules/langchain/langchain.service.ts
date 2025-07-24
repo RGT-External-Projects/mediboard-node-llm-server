@@ -11,6 +11,9 @@ interface LLMService {
   matchPhysicianInfo(request: any): Promise<any>;
   matchMedicalFacilityInfo(request: any): Promise<any>;
   matchLabReportsInfo(request: any): Promise<any>;
+  updateLabParameters(newParameters: Array<{id: number, parameter: string}>): Promise<any>;
+  updateDoctors(newDoctors: Array<{id: number, doctorName: string, doctorLastName: string}>): Promise<any>;
+  updateInstitutes(newInstitutes: Array<{id: number, value: string, displayName?: string}>): Promise<any>;
 }
 
 @Injectable()
@@ -178,6 +181,48 @@ export class LangChainService implements OnModuleInit {
       return results;
     } catch (error) {
       this.logger.error('Batch lab parameter matching failed:', error);
+      throw error;
+    }
+  }
+
+  async updateLabParameters(newParameters: Array<{id: number, parameter: string}>) {
+    this.ensureInitialized();
+    this.logger.log(`Updating lab parameters vector store with ${newParameters.length} entries`);
+
+    try {
+      const result = await this.llmService.updateLabParameters(newParameters);
+      this.logger.log('Lab parameters updated successfully');
+      return result;
+    } catch (error) {
+      this.logger.error('Lab parameters update failed:', error);
+      throw error;
+    }
+  }
+
+  async updateDoctors(newDoctors: Array<{id: number, doctorName: string, doctorLastName: string}>) {
+    this.ensureInitialized();
+    this.logger.log(`Updating doctors vector store with ${newDoctors.length} entries`);
+
+    try {
+      const result = await this.llmService.updateDoctors(newDoctors);
+      this.logger.log('Doctors updated successfully');
+      return result;
+    } catch (error) {
+      this.logger.error('Doctors update failed:', error);
+      throw error;
+    }
+  }
+
+  async updateInstitutes(newInstitutes: Array<{id: number, value: string, displayName?: string}>) {
+    this.ensureInitialized();
+    this.logger.log(`Updating institutes vector store with ${newInstitutes.length} entries`);
+
+    try {
+      const result = await this.llmService.updateInstitutes(newInstitutes);
+      this.logger.log('Institutes updated successfully');
+      return result;
+    } catch (error) {
+      this.logger.error('Institutes update failed:', error);
       throw error;
     }
   }

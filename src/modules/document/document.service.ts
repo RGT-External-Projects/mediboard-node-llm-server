@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import * as path from 'path';
 import { S3Service } from '../s3/s3.service';
+import { LangChainService } from '../langchain/langchain.service';
 import {
   DocumentProcessingData,
   ProcessingStatus,
@@ -23,6 +24,7 @@ export class DocumentService {
     private medicalQueue: Queue,
     private configService: ConfigService,
     private s3Service: S3Service,
+    private langChainService: LangChainService,
   ) {}
 
   async queueDocumentProcessing(request: {
@@ -713,6 +715,45 @@ export class DocumentService {
       return markdownContent;
     } catch (error) {
       this.logger.error(`Failed to get markdown content for job ${jobId}:`, error);
+      throw error;
+    }
+  }
+
+  async updateLabParameters(newParameters: Array<{id: number, parameter: string}>) {
+    this.logger.log(`Updating lab parameters vector store with ${newParameters.length} entries`);
+    
+    try {
+      const result = await this.langChainService.updateLabParameters(newParameters);
+      this.logger.log('Lab parameters updated successfully');
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to update lab parameters:', error);
+      throw error;
+    }
+  }
+
+  async updateDoctors(newDoctors: Array<{id: number, doctorName: string, doctorLastName: string}>) {
+    this.logger.log(`Updating doctors vector store with ${newDoctors.length} entries`);
+    
+    try {
+      const result = await this.langChainService.updateDoctors(newDoctors);
+      this.logger.log('Doctors updated successfully');
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to update doctors:', error);
+      throw error;
+    }
+  }
+
+  async updateInstitutes(newInstitutes: Array<{id: number, value: string, displayName?: string}>) {
+    this.logger.log(`Updating institutes vector store with ${newInstitutes.length} entries`);
+    
+    try {
+      const result = await this.langChainService.updateInstitutes(newInstitutes);
+      this.logger.log('Institutes updated successfully');
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to update institutes:', error);
       throw error;
     }
   }
