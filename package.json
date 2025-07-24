@@ -1,7 +1,7 @@
 {
   "name": "medical-processing-service",
   "version": "1.0.0",
-  "description": "NestJS Background Service for Medical Document Processing with BullMQ",
+  "description": "NestJS  Service for Medical Document Processing with BullMQ",
   "author": "Medical Processing Team",
   "private": true,
   "license": "MIT",
