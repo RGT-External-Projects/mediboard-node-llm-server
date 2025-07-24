@@ -666,6 +666,129 @@ export class LLMService {
       };
     }
   }
+
+  /**
+   * Update lab parameters vector store with new entries
+   */
+  async updateLabParameters(newParameters: Array<{id: number, parameter: string}>): Promise<ProcessingResult> {
+    try {
+      if (!this.isInitialized) {
+        return {
+          status: false,
+          message: 'Service not initialized. Call initialize() first.',
+          data: null,
+        };
+      }
+
+      console.log(`Updating lab parameters vector store with ${newParameters.length} entries`);
+
+      const result = await this.vectorService.updateLabParameters(newParameters);
+
+      if (!result.success) {
+        return {
+          status: false,
+          message: `Lab parameters update failed: ${result.error}`,
+          data: null,
+        };
+      }
+
+      console.log('Lab parameters updated successfully');
+      return {
+        status: true,
+        message: 'Lab parameters updated successfully',
+        data: result.data,
+      };
+    } catch (error) {
+      console.error('Error updating lab parameters:', error);
+      return {
+        status: false,
+        message: error instanceof Error ? error.message : 'Unknown error occurred',
+        data: null,
+      };
+    }
+  }
+
+  /**
+   * Update doctors vector store with new entries
+   */
+  async updateDoctors(newDoctors: Array<{id: number, doctorName: string, doctorLastName: string}>): Promise<ProcessingResult> {
+    try {
+      if (!this.isInitialized) {
+        return {
+          status: false,
+          message: 'Service not initialized. Call initialize() first.',
+          data: null,
+        };
+      }
+
+      console.log(`Updating doctors vector store with ${newDoctors.length} entries`);
+
+      const result = await this.vectorService.updateDoctors(newDoctors);
+
+      if (!result.success) {
+        return {
+          status: false,
+          message: `Doctors update failed: ${result.error}`,
+          data: null,
+        };
+      }
+
+      console.log('Doctors updated successfully');
+      return {
+        status: true,
+        message: 'Doctors updated successfully',
+        data: result.data,
+      };
+    } catch (error) {
+      console.error('Error updating doctors:', error);
+      return {
+        status: false,
+        message: error instanceof Error ? error.message : 'Unknown error occurred',
+        data: null,
+      };
+    }
+  }
+
+  /**
+   * Update institutes vector store with new entries
+   */
+  async updateInstitutes(newInstitutes: Array<{id: number, value: string, displayName?: string}>): Promise<ProcessingResult> {
+    try {
+      if (!this.isInitialized) {
+        return {
+          status: false,
+          message: 'Service not initialized. Call initialize() first.',
+          data: null,
+        };
+      }
+
+      console.log(`Updating institutes vector store with ${newInstitutes.length} entries`);
+
+      const result = await this.vectorService.updateInstitutes(newInstitutes);
+
+      if (!result.success) {
+        return {
+          status: false,
+          message: `Institutes update failed: ${result.error}`,
+          data: null,
+        };
+      }
+
+      console.log('Institutes updated successfully');
+      return {
+        status: true,
+        message: 'Institutes updated successfully',
+        data: result.data,
+      };
+    } catch (error) {
+      console.error('Error updating institutes:', error);
+      return {
+        status: false,
+        message: error instanceof Error ? error.message : 'Unknown error occurred',
+        data: null,
+      };
+    }
+  }
 }
 
 // Factory function for easy instantiation

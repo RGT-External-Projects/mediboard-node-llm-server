@@ -2266,6 +2266,224 @@ export class VectorService {
       };
     }
   }
+
+  /**
+   * Update lab parameters vector store with new entries
+   */
+  async updateLabParameters(newParameters: LabParameter[]): Promise<ApiResponse<boolean>> {
+    try {
+      if (!this.isInitialized) {
+        return {
+          success: false,
+          error: 'Vector service not initialized. Call initialize() first.',
+        };
+      }
+
+      console.log(`Updating lab parameters vector store with ${newParameters.length} new entries`);
+
+      // Validate new parameters
+      for (const param of newParameters) {
+        if (!param.id || !param.parameter || typeof param.id !== 'number' || typeof param.parameter !== 'string') {
+          return {
+            success: false,
+            error: 'Invalid parameter format. Expected: {id: number, parameter: string}',
+          };
+        }
+      }
+
+      // Merge with existing parameters, avoiding duplicates by ID
+      const existingIds = new Set(this.parameters.map(p => p.id));
+      const filteredNewParameters = newParameters.filter(p => !existingIds.has(p.id));
+      
+      if (filteredNewParameters.length === 0) {
+        console.log('No new unique parameters to add');
+        return {
+          success: true,
+          data: true,
+        };
+      }
+
+      this.parameters = [...this.parameters, ...filteredNewParameters];
+
+      // Create documents for new parameters
+      const newParameterDocuments: Document[] = filteredNewParameters.map((param) => {
+        return new Document({
+          pageContent: param.parameter,
+          metadata: {
+            id: param.id,
+            parameter: param.parameter,
+            type: 'lab_parameter',
+          },
+        });
+      });
+
+      // Add new documents to vector store
+      await this.vectorStore!.addDocuments(newParameterDocuments);
+
+      console.log(`✅ Added ${filteredNewParameters.length} new lab parameters to vector store`);
+
+      return {
+        success: true,
+        data: true,
+      };
+    } catch (error) {
+      console.error('Error updating lab parameters vector store:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+      };
+    }
+  }
+
+  /**
+   * Update doctors vector store with new entries
+   */
+  async updateDoctors(newDoctors: Array<{id: number, doctorName: string, doctorLastName: string}>): Promise<ApiResponse<boolean>> {
+    try {
+      if (!this.isInitialized) {
+        return {
+          success: false,
+          error: 'Vector service not initialized. Call initialize() first.',
+        };
+      }
+
+      console.log(`Updating doctors vector store with ${newDoctors.length} new entries`);
+
+      // Validate new doctors
+      for (const doctor of newDoctors) {
+        if (!doctor.id || typeof doctor.id !== 'number' || 
+            typeof doctor.doctorName !== 'string' || typeof doctor.doctorLastName !== 'string') {
+          return {
+            success: false,
+            error: 'Invalid doctor format. Expected: {id: number, doctorName: string, doctorLastName: string}',
+          };
+        }
+      }
+
+      // Filter out doctors with empty names and duplicates
+      const validNewDoctors = newDoctors.filter((doctor) => {
+        const fullName = `${doctor.doctorName || ''} ${doctor.doctorLastName || ''}`.trim();
+        return fullName.length > 0;
+      });
+
+      const existingIds = new Set(this.doctors.map(d => d.id));
+      const filteredNewDoctors = validNewDoctors.filter(d => !existingIds.has(d.id));
+
+      if (filteredNewDoctors.length === 0) {
+        console.log('No new unique doctors to add');
+        return {
+          success: true,
+          data: true,
+        };
+      }
+
+      this.doctors = [...this.doctors, ...filteredNewDoctors];
+
+      // Create documents for new doctors
+      const newDoctorDocuments: Document[] = filteredNewDoctors.map((doctor) => {
+        const fullName = `${doctor.doctorName || ''} ${doctor.doctorLastName || ''}`.trim();
+        return new Document({
+          pageContent: fullName,
+          metadata: {
+            id: doctor.id,
+            doctorName: doctor.doctorName,
+            doctorLastName: doctor.doctorLastName,
+            type: 'doctor',
+          },
+        });
+      });
+
+      // Add new documents to vector store
+      await this.doctorsVectorStore!.addDocuments(newDoctorDocuments);
+
+      console.log(`✅ Added ${filteredNewDoctors.length} new doctors to vector store`);
+
+      return {
+        success: true,
+        data: true,
+      };
+    } catch (error) {
+      console.error('Error updating doctors vector store:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+      };
+    }
+  }
+
+  /**
+   * Update institutes vector store with new entries
+   */
+  async updateInstitutes(newInstitutes: Array<{id: number, value: string, displayName?: string}>): Promise<ApiResponse<boolean>> {
+    try {
+      if (!this.isInitialized) {
+        return {
+          success: false,
+          error: 'Vector service not initialized. Call initialize() first.',
+        };
+      }
+
+      console.log(`Updating institutes vector store with ${newInstitutes.length} new entries`);
+
+      // Validate new institutes
+      for (const institute of newInstitutes) {
+        if (!institute.id || !institute.value || 
+            typeof institute.id !== 'number' || typeof institute.value !== 'string') {
+          return {
+            success: false,
+            error: 'Invalid institute format. Expected: {id: number, value: string, displayName?: string}',
+          };
+        }
+      }
+
+      // Filter out institutes with empty values and duplicates
+      const validNewInstitutes = newInstitutes.filter((institute) => {
+        return institute.value && institute.value.trim().length > 0;
+      });
+
+      const existingIds = new Set(this.institutes.map(i => i.id));
+      const filteredNewInstitutes = validNewInstitutes.filter(i => !existingIds.has(i.id));
+
+      if (filteredNewInstitutes.length === 0) {
+        console.log('No new unique institutes to add');
+        return {
+          success: true,
+          data: true,
+        };
+      }
+
+      this.institutes = [...this.institutes, ...filteredNewInstitutes];
+
+      // Create documents for new institutes
+      const newInstituteDocuments: Document[] = filteredNewInstitutes.map((institute) => {
+        return new Document({
+          pageContent: institute.value,
+          metadata: {
+            id: institute.id,
+            value: institute.value,
+            displayName: institute.displayName || institute.value,
+            type: 'institute',
+          },
+        });
+      });
+
+      // Add new documents to vector store
+      await this.institutesVectorStore!.addDocuments(newInstituteDocuments);
+
+      console.log(`✅ Added ${filteredNewInstitutes.length} new institutes to vector store`);
+
+      return {
+        success: true,
+        data: true,
+      };
+    } catch (error) {
+      console.error('Error updating institutes vector store:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+      };
+    }
+  }
 }
 
 // Factory function for easy instantiation

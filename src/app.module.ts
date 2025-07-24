@@ -6,6 +6,7 @@ import { DocumentModule } from './modules/document/document.module';
 import { ProcessingModule } from './modules/processing/processing.module';
 import { LangChainModule } from './modules/langchain/langchain.module';
 import { HealthModule } from './modules/health/health.module';
+import { S3Module } from './modules/s3/s3.module';
 import { RedisConfigService } from './config/redis.config';
 
 @Module({
@@ -38,6 +39,7 @@ import { RedisConfigService } from './config/redis.config';
     ProcessingModule,
     LangChainModule,
     HealthModule,
+    S3Module,
   ],
   providers: [RedisConfigService],
 })

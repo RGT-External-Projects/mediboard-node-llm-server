@@ -5,6 +5,8 @@ import { ConfigService } from '@nestjs/config';
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import * as path from 'path';
+import { S3Service } from '../s3/s3.service';
+import { LangChainService } from '../langchain/langchain.service';
 import {
   DocumentProcessingData,
   ProcessingStatus,
@@ -21,6 +23,8 @@ export class DocumentService {
     @InjectQueue(QUEUE_NAMES.MEDICAL_PROCESSING)
     private medicalQueue: Queue,
     private configService: ConfigService,
+    private s3Service: S3Service,
+    private langChainService: LangChainService,
   ) {}
 
   async queueDocumentProcessing(request: {
@@ -72,6 +76,84 @@ export class DocumentService {
       };
     } catch (error) {
       this.logger.error('Failed to queue document processing:', error);
+      throw error;
+    }
+  }
+
+  async queueS3DocumentProcessing(request: {
+    fileKey: string;
+    userId: string;
+    language: string;
+  }): Promise<{ jobId: string; status: string; downloadMetrics?: { duration: number; fileSize: number } }> {
+    try {
+      const jobId = request.userId;
+      const uploadPath = this.configService.get('UPLOAD_PATH', './uploads');
+
+      // Ensure upload directory exists
+      if (!fs.existsSync(uploadPath)) {
+        fs.mkdirSync(uploadPath, { recursive: true });
+      }
+
+      // Extract filename from S3 key
+      const fileName = path.basename(request.fileKey);
+      const localFileName = `${jobId}_${fileName}`;
+      const localFilePath = path.join(uploadPath, localFileName);
+
+      this.logger.log(`Starting S3 document processing for key: ${request.fileKey}, userId: ${request.userId}`);
+
+      // Download file from S3
+      const downloadMetrics = await this.s3Service.downloadFromS3(request.fileKey, localFilePath);
+
+      // Validate file size (10MB limit like the original endpoint)
+      const maxFileSize = 10 * 1024 * 1024; // 10MB
+      if (downloadMetrics.fileSize > maxFileSize) {
+        // Clean up the downloaded file
+        if (fs.existsSync(localFilePath)) {
+          fs.unlinkSync(localFilePath);
+        }
+        throw new Error(`File size (${downloadMetrics.fileSize} bytes) exceeds the 10MB limit`);
+      }
+
+      // Validate file type based on extension
+      const allowedExtensions = ['.pdf', '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff', '.webp'];
+      const fileExtension = path.extname(fileName).toLowerCase();
+      if (!allowedExtensions.includes(fileExtension)) {
+        // Clean up the downloaded file
+        if (fs.existsSync(localFilePath)) {
+          fs.unlinkSync(localFilePath);
+        }
+        throw new Error(`File type ${fileExtension} is not allowed. Only PDF and image files are supported.`);
+      }
+
+      const jobData: DocumentProcessingData = {
+        jobId,
+        filePath: localFilePath,
+        fileName: fileName,
+        userId: request.userId,
+        language: request.language,
+        uploadedAt: new Date(),
+      };
+
+      // Add job to medical processing queue
+      const job = await this.medicalQueue.add(JOB_TYPES.PROCESS_DOCUMENT, jobData, {
+        jobId,
+        delay: 0,
+        attempts: this.configService.get('MAX_RETRY_ATTEMPTS', 3),
+        backoff: {
+          type: 'exponential',
+          delay: 2000,
+        },
+      });
+
+      this.logger.log(`S3 document processing job queued: ${jobId} for file: ${fileName}, download metrics:`, downloadMetrics);
+
+      return {
+        jobId,
+        status: 'queued',
+        downloadMetrics,
+      };
+    } catch (error) {
+      this.logger.error('Failed to queue S3 document processing:', error);
       throw error;
     }
   }
@@ -633,6 +715,45 @@ export class DocumentService {
       return markdownContent;
     } catch (error) {
       this.logger.error(`Failed to get markdown content for job ${jobId}:`, error);
+      throw error;
+    }
+  }
+
+  async updateLabParameters(newParameters: Array<{id: number, parameter: string}>) {
+    this.logger.log(`Updating lab parameters vector store with ${newParameters.length} entries`);
+    
+    try {
+      const result = await this.langChainService.updateLabParameters(newParameters);
+      this.logger.log('Lab parameters updated successfully');
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to update lab parameters:', error);
+      throw error;
+    }
+  }
+
+  async updateDoctors(newDoctors: Array<{id: number, doctorName: string, doctorLastName: string}>) {
+    this.logger.log(`Updating doctors vector store with ${newDoctors.length} entries`);
+    
+    try {
+      const result = await this.langChainService.updateDoctors(newDoctors);
+      this.logger.log('Doctors updated successfully');
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to update doctors:', error);
+      throw error;
+    }
+  }
+
+  async updateInstitutes(newInstitutes: Array<{id: number, value: string, displayName?: string}>) {
+    this.logger.log(`Updating institutes vector store with ${newInstitutes.length} entries`);
+    
+    try {
+      const result = await this.langChainService.updateInstitutes(newInstitutes);
+      this.logger.log('Institutes updated successfully');
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to update institutes:', error);
       throw error;
     }
   }
