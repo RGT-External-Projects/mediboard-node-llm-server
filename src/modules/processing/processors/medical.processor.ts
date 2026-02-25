@@ -10,6 +10,7 @@ import {
   JOB_TYPES,
   JobResult,
 } from '../../../types';
+import { DiscordNotificationService } from '../../notification/discord-notification.service';
 
 @Processor(QUEUE_NAMES.MEDICAL_PROCESSING)
 export class MedicalProcessor {
@@ -19,6 +20,7 @@ export class MedicalProcessor {
     private readonly langChainService: LangChainService,
     private readonly webhookService: WebhookService,
     private readonly documentService: DocumentService,
+    private readonly discordNotificationService: DiscordNotificationService,
   ) {}
 
   @Process(JOB_TYPES.PROCESS_DOCUMENT)
@@ -209,6 +211,9 @@ export class MedicalProcessor {
       this.webhookService.fireWebhooks(failurePayload).catch(webhookError => {
         this.logger.error(`Failed to fire failure webhooks for job ${jobId}:`, webhookError);
       });
+
+      // Send Discord notification for failure
+      this.discordNotificationService.notifyFailure(failurePayload)
 
       return {
         success: false,

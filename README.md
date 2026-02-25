@@ -75,6 +75,8 @@ REDIS_PORT=6379
 REDIS_PASSWORD=
 REDIS_DB=0
 
+DISCORD_WEBHOOK_URL=discord_channel_webhook_url_here
+
 # API Keys
 OPENAI_API_KEY=your_openai_api_key_here
 ANTHROPIC_KEY=your_anthropic_api_key_here
