@@ -6,6 +6,7 @@ import { QUEUE_NAMES } from '../../types';
 import { LangChainModule } from '../langchain/langchain.module';
 import { WebhookModule } from '../webhook/webhook.module';
 import { DocumentModule } from '../document/document.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   imports: [
@@ -33,6 +34,9 @@ import { DocumentModule } from '../document/document.module';
     
     // Import Document services
     DocumentModule,
+
+    // Import Notification services
+    NotificationModule,
   ],
   providers: [
     ProcessingService,
