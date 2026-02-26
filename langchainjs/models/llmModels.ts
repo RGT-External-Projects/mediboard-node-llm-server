@@ -120,7 +120,7 @@ export function createOpenAIConfig(
 }
 
 export function createClaudeConfig(
-  modelName: string = 'claude-3-7-sonnet-latest',
+  modelName: string = 'claude-sonnet-4-6',
   temperature: number = 0.1,
   maxTokens: number = 16384,
 ): ModelConfig {
