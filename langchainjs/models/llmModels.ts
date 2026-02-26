@@ -38,6 +38,7 @@ export class LLMModelsService {
             anthropicApiKey: config.apiKey || this.anthropicApiKey,
             temperature: config.temperature || 0.1,
             maxTokens: config.maxTokens || 4096,
+            topP: 1,
           });
 
           return {
